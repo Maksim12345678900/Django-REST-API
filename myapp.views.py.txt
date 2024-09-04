@@ -1,0 +1,29 @@
+from rest_framework import viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
+from .models import Warehouse, Product
+from .serializers import UserSerializer, WarehouseSerializer, ProductSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+class WarehouseViewSet(viewsets.ModelViewSet):
+    queryset = Warehouse.objects.all()
+    serializer_class = WarehouseSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class ProductViewSet(viewsets.ModelViewSet):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        if self.request.user.role != 'supplier':
+            raise PermissionDenied("Only suppliers can add products.")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        product = serializer.instance
+        if self.request.user.role == 'consumer' and serializer.validated_data.get('quantity') > product.quantity:
+            raise PermissionDenied("Cannot take more products than available.")
+        serializer.save()

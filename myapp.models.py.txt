@@ -1,0 +1,20 @@
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class User(AbstractUser):
+    SUPPLIER = 'supplier'
+    CONSUMER = 'consumer'
+    ROLE_CHOICES = [
+        (SUPPLIER, 'Supplier'),
+        (CONSUMER, 'Consumer'),
+    ]
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+
+class Warehouse(models.Model):
+    name = models.CharField(max_length=255)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class Product(models.Model):
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField(default=0)
+    warehouse = models.ForeignKey(Warehouse, related_name='products', on_delete=models.CASCADE)
